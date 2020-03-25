@@ -35,7 +35,7 @@ X:\> python pyinstxtractor.py test.exe
 You can now use a python decompiler on the pyc files within the extracted directory
 ```
 
-After extracting the pyc's you can use a Python decompiler like [Uncompyle6](Ihttps://github.com/rocky/python-uncompyle6/).
+After extracting the pyc's you can use a Python decompiler like [Uncompyle6](https://github.com/rocky/python-uncompyle6/).
 
 ```
 X:\> uncompyle6.exe test.exe_extracted\test.pyc
