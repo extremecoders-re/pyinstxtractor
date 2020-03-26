@@ -2,7 +2,7 @@
 
 PyInstaller Extractor is a Python script to extract the contents of a PyInstaller generated Windows executable file. The contents of the pyz file (usually pyc files) present inside the executable are also extracted.
 
-The header of the pyc files are automatically fixed so that a Python bytecode decompiler will recognize it. The script can run on both Python 2.x and 3.x. Pyinstaller versions 2.0, 2.1, 3.0, 3.1, 3.2, 3.3, 3.6 are supported. Probably will work with other versions too.
+The header of the pyc files are automatically fixed so that a Python bytecode decompiler will recognize it. The script can run on both Python 2.x and 3.x. Pyinstaller versions 2.0, 2.1, 3.0, 3.1, 3.2, 3.3, 3.4, 3.5 and 3.6 are tested & supported. Probably will work with other versions too.
 
 This project was originally hosted on [SourceForge](https://sourceforge.net/projects/pyinstallerextractor/).
 
