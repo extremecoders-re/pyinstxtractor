@@ -248,9 +248,17 @@ class PyInstArchive:
                 assert len(data) == entry.uncmprsdDataSize # Sanity Check
 
             if entry.typeCmprsData == b's':
+                # s -> ARCHIVE_ITEM_PYSOURCE
                 # Entry point are expected to be python scripts
                 print('[+] Possible entry point: {0}.pyc'.format(entry.name))
                 self._writePyc(entry.name + '.pyc', data)
+
+            elif entry.typeCmprsData == b'M' or entry.typeCmprsData == b'm':
+                # M -> ARCHIVE_ITEM_PYPACKAGE
+                # m -> ARCHIVE_ITEM_PYMODULE
+                # packages and modules are pyc files with their header's intact
+                with open(entry.name + '.pyc', 'wb') as f:
+                    f.write(data)
             
             else:
                 with open(entry.name, 'wb') as f:
