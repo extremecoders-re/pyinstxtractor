@@ -89,8 +89,15 @@ import struct
 import marshal
 import zlib
 import sys
-import imp
 from uuid import uuid4 as uniquename
+
+# imp is deprecated in Python 2 in favour of importlib
+if sys.version_info.major == 3:
+    import importlib
+    pyc_magic = importlib.util.MAGIC_NUMBER
+else:
+    import imp
+    pyc_magic = imp.get_magic()
 
 
 class CTOCEntry:
@@ -269,7 +276,7 @@ class PyInstArchive:
 
     def _writePyc(self, filename, data):
         with open(filename, 'wb') as pycFile:
-            pycFile.write(imp.get_magic())            # pyc magic
+            pycFile.write(pyc_magic)            # pyc magic
 
             if self.pyver >= 37:                # PEP 552 -- Deterministic pycs
                 pycFile.write(b'\0' * 4)        # Bitfield
@@ -296,7 +303,7 @@ class PyInstArchive:
             pycHeader = f.read(4) # Python magic value
 
             # Skip PYZ extraction if not running under the same python version
-            if imp.get_magic() != pycHeader:
+            if pyc_magic != pycHeader:
                 print('[!] Warning: This script is running in a different Python version than the one used to build the executable.')
                 print('[!] Please run this script in Python{0} to prevent extraction errors during unmarshalling'.format(self.pyver))
                 print('[!] Skipping pyz extraction')
