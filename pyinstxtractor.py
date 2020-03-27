@@ -91,7 +91,7 @@ import zlib
 import sys
 from uuid import uuid4 as uniquename
 
-# imp is deprecated in Python 2 in favour of importlib
+# imp is deprecated in Python3 in favour of importlib
 if sys.version_info.major == 3:
     import importlib
     pyc_magic = importlib.util.MAGIC_NUMBER
