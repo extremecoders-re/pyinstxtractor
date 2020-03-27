@@ -93,8 +93,8 @@ from uuid import uuid4 as uniquename
 
 # imp is deprecated in Python3 in favour of importlib
 if sys.version_info.major == 3:
-    import importlib
-    pyc_magic = importlib.util.MAGIC_NUMBER
+    from importlib.util import MAGIC_NUMBER
+    pyc_magic = MAGIC_NUMBER
 else:
     import imp
     pyc_magic = imp.get_magic()
