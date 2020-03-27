@@ -90,7 +90,6 @@ import marshal
 import zlib
 import sys
 import imp
-import types
 from uuid import uuid4 as uniquename
 
 
@@ -368,4 +367,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-    
