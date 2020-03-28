@@ -3,7 +3,7 @@ PyInstaller Extractor v2.0 (Supports pyinstaller 3.6, 3.5, 3.4, 3.3, 3.2, 3.1, 3
 Author : Extreme Coders
 E-mail : extremecoders(at)hotmail(dot)com
 Web    : https://0xec.blogspot.com
-Date   : 26-March-2019
+Date   : 26-March-2020
 Url    : https://github.com/extremecoders-re/pyinstxtractor
 
 For any suggestions, leave a comment on
@@ -75,7 +75,7 @@ Version 1.9 (November 29, 2017)
 - Added support for pyinstaller 3.3
 - Display the scripts which are run at entry (Thanks to Michael Gillespie @ malwarehunterteam for the feature request)
 
-Version 2.0 (March 26, 2019)
+Version 2.0 (March 26, 2020)
 -------------------------------------------------
 - Project migrated to github
 - Supports pyinstaller 3.6
