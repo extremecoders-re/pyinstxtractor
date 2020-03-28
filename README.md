@@ -41,6 +41,9 @@ After extracting the pyc's you can use a Python decompiler like [Uncompyle6](htt
 X:\> uncompyle6.exe test.exe_extracted\test.pyc
 X:\> uncompyle6.exe test.exe_extracted\PYZ-00.pyz_extracted\__future__.pyc
 ```
+## Extracting Linux ELF binaries
+
+Pyinstxtractor can also extract Linux ELF binaries. Please see the [Wiki](https://github.com/extremecoders-re/pyinstxtractor/wiki/Extracting-Linux-ELF-binaries) for more information.
 
 ## License
 
