@@ -45,6 +45,8 @@ X:\> uncompyle6.exe test.exe_extracted\PYZ-00.pyz_extracted\__future__.pyc
 
 Pyinstxtractor can also extract Linux ELF binaries. Please see the [Wiki](https://github.com/extremecoders-re/pyinstxtractor/wiki/Extracting-Linux-ELF-binaries) for more information.
 
+For other questions, please see the [FAQ](https://github.com/extremecoders-re/pyinstxtractor/wiki/Frequently-Asked-Questions)
+
 ## License
 
 GNU General Public License v3.0
