@@ -226,8 +226,18 @@ class PyInstArchive:
 
             parsedLen += entrySize
         print('[+] Found {0} files in CArchive'.format(len(self.tocList)))
-    
-    
+
+
+    def _writeRawData(self, filepath, data):
+        nm = filepath.replace('\\', os.path.sep).replace('/', os.path.sep).replace('..', '__')
+        nmDir = os.path.dirname(nm)
+        if nmDir != '' and not os.path.exists(nmDir): # Check if path exists, create if not
+            os.makedirs(nmDir)
+
+        with open(nm, 'wb') as f:
+            f.write(data)
+
+
     def extractFiles(self):
         print('[+] Beginning extraction...please standby')
         extractionDir = os.path.join(os.getcwd(), os.path.basename(self.filePath) + '_extracted')
@@ -263,12 +273,10 @@ class PyInstArchive:
                 # M -> ARCHIVE_ITEM_PYPACKAGE
                 # m -> ARCHIVE_ITEM_PYMODULE
                 # packages and modules are pyc files with their header's intact
-                with open(entry.name + '.pyc', 'wb') as f:
-                    f.write(data)
-            
+                self._writeRawData(entry.name + '.pyc', data)
+
             else:
-                with open(entry.name, 'wb') as f:
-                    f.write(data)
+                self._writeRawData(entry.name, data)
 
                 if entry.typeCmprsData == b'z' or entry.typeCmprsData == b'Z':
                     self._extractPyz(entry.name)
@@ -327,29 +335,35 @@ class PyInstArchive:
             for key in toc.keys():
                 (ispkg, pos, length) = toc[key]
                 f.seek(pos, os.SEEK_SET)
-
                 fileName = key
+
                 try:
                     # for Python > 3.3 some keys are bytes object some are str object
-                    fileName = key.decode('utf-8')
+                    fileName = fileName.decode('utf-8')
                 except:
                     pass
 
-                # Make sure destination directory exists, ensuring we keep inside dirName
-                destName = os.path.join(dirName, fileName.replace("..", "__"))
-                destDirName = os.path.dirname(destName)
-                if not os.path.exists(destDirName):
-                    os.makedirs(destDirName)
+                # Prevent writing outside dirName
+                fileName = fileName.replace('..', '__').replace('.', os.path.sep)
+
+                if ispkg == 1:
+                    filePath = os.path.join(dirName, fileName, '__init__.pyc')
+
+                else:
+                    filePath = os.path.join(dirName, fileName + '.pyc')
+
+                fileDir = os.path.dirname(filePath)
+                if not os.path.exists(fileDir):
+                    os.makedirs(fileDir)
 
                 try:
                     data = f.read(length)
                     data = zlib.decompress(data)
                 except:
-                    print('[!] Error: Failed to decompress {0}, probably encrypted. Extracting as is.'.format(fileName))
-                    open(destName + '.pyc.encrypted', 'wb').write(data)
-                    continue
-
-                self._writePyc(destName + '.pyc', data)
+                    print('[!] Error: Failed to decompress {0}, probably encrypted. Extracting as is.'.format(filePath))
+                    open(filePath + '.encrypted', 'wb').write(data)
+                else:
+                    self._writePyc(filePath, data)
 
 
 def main():
