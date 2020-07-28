@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+
 """
 PyInstaller Extractor v2.0 (Supports pyinstaller 3.6, 3.5, 3.4, 3.3, 3.2, 3.1, 3.0, 2.1, 2.0)
 Author : Extreme Coders
@@ -238,14 +240,19 @@ class PyInstArchive:
             f.write(data)
 
 
-    def extractFiles(self):
+    def extractFiles(self, custom_dir=None):
         print('[+] Beginning extraction...please standby')
-        extractionDir = os.path.join(os.getcwd(), os.path.basename(self.filePath) + '_extracted')
+        if custom_dir is None:
+            extractionDir = os.path.join(os.getcwd(), os.path.basename(self.filePath) + '_extracted')
 
-        if not os.path.exists(extractionDir):
-            os.mkdir(extractionDir)
+            if not os.path.exists(extractionDir):
+                os.mkdir(extractionDir)
 
-        os.chdir(extractionDir)
+            os.chdir(extractionDir)
+        else:
+            if not os.path.exists(custom_dir):
+                os.makedirs(custom_dir)
+            os.chdir(custom_dir)
 
         for entry in self.tocList:
             basePath = os.path.dirname(entry.name)
