@@ -240,10 +240,9 @@ class PyInstArchive:
 
     def extractFiles(self):
         print('[+] Beginning extraction...please standby')
-        if len(sys.argv) < 3:
-                extractionDir = os.path.join(os.getcwd(), os.path.basename(self.filePath) + '_extracted')
-        else:
-                extractionDir = sys.argv[2]
+        extractionDir = os.path.join(os.getcwd(), os.path.basename(self.filePath) + '_extracted')
+        if len(sys.argv) > 2:
+            extractionDir = sys.argv[2]
 
         if not os.path.exists(extractionDir):
             os.mkdir(extractionDir)
