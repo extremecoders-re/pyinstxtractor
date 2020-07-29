@@ -237,10 +237,11 @@ class PyInstArchive:
         with open(nm, 'wb') as f:
             f.write(data)
 
-
-    def extractFiles(self, extractionDir=sys.argv[2]):
+    def extractFiles(self):
         print('[+] Beginning extraction...please standby')
-        if extractionDir is None:
+        if sys.argv[2] != "":
+                extractionDir = sys.argv[2]
+        else:
                 extractionDir = os.path.join(os.getcwd(), os.path.basename(self.filePath) + '_extracted')
 
         if not os.path.exists(extractionDir):
