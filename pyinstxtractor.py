@@ -89,6 +89,7 @@ import struct
 import marshal
 import zlib
 import sys
+import mmap
 from uuid import uuid4 as uniquename
 
 # imp is deprecated in Python3 in favour of importlib
@@ -123,6 +124,9 @@ class PyInstArchive:
         try:
             self.fPtr = open(self.filePath, 'rb')
             self.fileSize = os.stat(self.filePath).st_size
+            self.data = mmap.mmap(self.fPtr.fileno(),
+                                  0,
+                                  access=mmap.ACCESS_READ)
         except:
             print('[!] Error: Could not open {0}'.format(self.filePath))
             return False
@@ -135,46 +139,21 @@ class PyInstArchive:
         except:
             pass
 
-
-    def checkFile(self):
-        print('[+] Processing {0}'.format(self.filePath))
-        # Check if it is a 2.0 archive
-        self.fPtr.seek(self.fileSize - self.PYINST20_COOKIE_SIZE, os.SEEK_SET)
-        magicFromFile = self.fPtr.read(len(self.MAGIC))
-
-        if magicFromFile == self.MAGIC:
-            self.pyinstVer = 20     # pyinstaller 2.0
-            print('[+] Pyinstaller version: 2.0')
-            return True
-
-        # Check for pyinstaller 2.1+ before bailing out
-        self.fPtr.seek(self.fileSize - self.PYINST21_COOKIE_SIZE, os.SEEK_SET)
-        magicFromFile = self.fPtr.read(len(self.MAGIC))
-
-        if magicFromFile == self.MAGIC:
-            print('[+] Pyinstaller version: 2.1+')
-            self.pyinstVer = 21     # pyinstaller 2.1+
-            return True
-
-        print('[!] Error : Unsupported pyinstaller version or not a pyinstaller archive')
-        return False
-
-
     def getCArchiveInfo(self):
         try:
-            if self.pyinstVer == 20:
-                self.fPtr.seek(self.fileSize - self.PYINST20_COOKIE_SIZE, os.SEEK_SET)
+            pos = self.data.rfind(self.MAGIC)
+            if pos >= 0:
+                if b'py' in self.data[pos + self.PYINST20_COOKIE_SIZE:pos +
+                                      self.PYINST21_COOKIE_SIZE]:
+                    pyinstVer = 21
+                else:
+                    pyinstVer = 20
 
-                # Read CArchive cookie
+            # Read CArchive cookie
                 (magic, lengthofPackage, toc, tocLen, self.pyver) = \
-                struct.unpack('!8siiii', self.fPtr.read(self.PYINST20_COOKIE_SIZE))
-
-            elif self.pyinstVer == 21:
-                self.fPtr.seek(self.fileSize - self.PYINST21_COOKIE_SIZE, os.SEEK_SET)
-
-                # Read CArchive cookie
-                (magic, lengthofPackage, toc, tocLen, self.pyver, pylibname) = \
-                struct.unpack('!8siiii64s', self.fPtr.read(self.PYINST21_COOKIE_SIZE))
+                struct.unpack('!8sIIii',self.data[pos:pos + PYINST20_COOKIE_SIZE])
+            else:
+                raise Exception("Not a pyinstaller archive")
 
         except:
             print('[!] Error : The file is not a pyinstaller archive')
@@ -182,9 +161,10 @@ class PyInstArchive:
 
         print('[+] Python version: {0}'.format(self.pyver))
 
-        # Overlay is the data appended at the end of the PE
         self.overlaySize = lengthofPackage
-        self.overlayPos = self.fileSize - self.overlaySize
+        self.overlayPos = pos - self.overlaySize + (self.PYINST20_COOKIE_SIZE
+                                                    if pyinstVer == 20 else
+                                                    self.PYINST21_COOKIE_SIZE)
         self.tableOfContentsPos = self.overlayPos + toc
         self.tableOfContentsSize = tocLen
 
@@ -288,7 +268,7 @@ class PyInstArchive:
 
             if self.pyver >= 37:                # PEP 552 -- Deterministic pycs
                 pycFile.write(b'\0' * 4)        # Bitfield
-                pycFile.write(b'\0' * 8)        # (Timestamp + size) || hash 
+                pycFile.write(b'\0' * 8)        # (Timestamp + size) || hash
 
             else:
                 pycFile.write(b'\0' * 4)      # Timestamp
