@@ -1,5 +1,5 @@
 """
-PyInstaller Extractor v2.0 (Supports pyinstaller 4.4, 4.3, 4.2, 4.1, 4.0, 3.6, 3.5, 3.4, 3.3, 3.2, 3.1, 3.0, 2.1, 2.0)
+PyInstaller Extractor v2.0 (Supports pyinstaller 4.5.1, 4.5, 4.4, 4.3, 4.2, 4.1, 4.0, 3.6, 3.5, 3.4, 3.3, 3.2, 3.1, 3.0, 2.1, 2.0)
 Author : Extreme Coders
 E-mail : extremecoders(at)hotmail(dot)com
 Web    : https://0xec.blogspot.com
@@ -138,39 +138,63 @@ class PyInstArchive:
 
     def checkFile(self):
         print('[+] Processing {0}'.format(self.filePath))
-        # Check if it is a 2.0 archive
-        self.fPtr.seek(self.fileSize - self.PYINST20_COOKIE_SIZE, os.SEEK_SET)
-        magicFromFile = self.fPtr.read(len(self.MAGIC))
 
-        if magicFromFile == self.MAGIC:
-            self.pyinstVer = 20     # pyinstaller 2.0
-            print('[+] Pyinstaller version: 2.0')
-            return True
+        searchChunkSize = 8192
+        endPos = self.fileSize
+        self.cookiePos = -1
 
-        # Check for pyinstaller 2.1+ before bailing out
-        self.fPtr.seek(self.fileSize - self.PYINST21_COOKIE_SIZE, os.SEEK_SET)
-        magicFromFile = self.fPtr.read(len(self.MAGIC))
+        if endPos < len(self.MAGIC):
+            print('[!] Error : File is too short or truncated')
+            return False
 
-        if magicFromFile == self.MAGIC:
+        while True:
+            startPos = endPos - searchChunkSize if endPos >= searchChunkSize else 0
+            chunkSize = endPos - startPos
+
+            if chunkSize < len(self.MAGIC):
+                break
+
+            self.fPtr.seek(startPos, os.SEEK_SET)
+            data = self.fPtr.read(chunkSize)
+
+            offs = data.rfind(self.MAGIC)
+
+            if offs != -1:
+                self.cookiePos = startPos + offs
+                break
+
+            endPos = startPos + len(self.MAGIC) - 1
+
+            if startPos == 0:
+                break
+
+        if self.cookiePos == -1:
+            print('[!] Error : Missing cookie, unsupported pyinstaller version or not a pyinstaller archive')
+            return False
+
+        self.fPtr.seek(self.cookiePos + self.PYINST20_COOKIE_SIZE, os.SEEK_SET)
+
+        if b'python' in self.fPtr.read(64):
             print('[+] Pyinstaller version: 2.1+')
             self.pyinstVer = 21     # pyinstaller 2.1+
-            return True
+        else:
+            self.pyinstVer = 20     # pyinstaller 2.0
+            print('[+] Pyinstaller version: 2.0')
 
-        print('[!] Error : Unsupported pyinstaller version or not a pyinstaller archive')
-        return False
+        return True
 
 
     def getCArchiveInfo(self):
         try:
             if self.pyinstVer == 20:
-                self.fPtr.seek(self.fileSize - self.PYINST20_COOKIE_SIZE, os.SEEK_SET)
+                self.fPtr.seek(self.cookiePos, os.SEEK_SET)
 
                 # Read CArchive cookie
                 (magic, lengthofPackage, toc, tocLen, self.pyver) = \
                 struct.unpack('!8siiii', self.fPtr.read(self.PYINST20_COOKIE_SIZE))
 
             elif self.pyinstVer == 21:
-                self.fPtr.seek(self.fileSize - self.PYINST21_COOKIE_SIZE, os.SEEK_SET)
+                self.fPtr.seek(self.cookiePos, os.SEEK_SET)
 
                 # Read CArchive cookie
                 (magic, lengthofPackage, toc, tocLen, self.pyver, pylibname) = \
@@ -182,13 +206,16 @@ class PyInstArchive:
 
         print('[+] Python version: {0}'.format(self.pyver))
 
+        # Additional data after the cookie
+        tailBytes = self.fileSize - self.cookiePos - (self.PYINST20_COOKIE_SIZE if self.pyinstVer == 20 else self.PYINST21_COOKIE_SIZE)
+        
         # Overlay is the data appended at the end of the PE
-        self.overlaySize = lengthofPackage
+        self.overlaySize = lengthofPackage + tailBytes
         self.overlayPos = self.fileSize - self.overlaySize
         self.tableOfContentsPos = self.overlayPos + toc
         self.tableOfContentsSize = tocLen
 
-        print('[+] Length of package: {0} bytes'.format(self.overlaySize))
+        print('[+] Length of package: {0} bytes'.format(lengthofPackage))
         return True
 
 
