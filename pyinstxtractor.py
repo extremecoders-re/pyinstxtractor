@@ -302,6 +302,12 @@ class PyInstArchive:
                 # packages and modules are pyc files with their header's intact
                 self._writeRawData(entry.name + '.pyc', data)
 
+            elif entry.typeCmprsData == b'd' or entry.typeCmprsData == b'o':
+                # d -> ARCHIVE_ITEM_DEPENDENCY
+                # o -> ARCHIVE_ITEM_RUNTIME_OPTION
+                # These are runtime options, not files
+                pass
+
             else:
                 self._writeRawData(entry.name, data)
 
