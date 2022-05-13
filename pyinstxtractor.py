@@ -275,12 +275,6 @@ class PyInstArchive:
         os.chdir(extractionDir)
 
         for entry in self.tocList:
-            basePath = os.path.dirname(entry.name)
-            if basePath != '':
-                # Check if path exists, create if not
-                if not os.path.exists(basePath):
-                    os.makedirs(basePath)
-
             self.fPtr.seek(entry.position, os.SEEK_SET)
             data = self.fPtr.read(entry.cmprsdDataSize)
 
@@ -289,6 +283,18 @@ class PyInstArchive:
                 # Malware may tamper with the uncompressed size
                 # Comment out the assertion in such a case
                 assert len(data) == entry.uncmprsdDataSize # Sanity Check
+
+            if entry.typeCmprsData == b'd' or entry.typeCmprsData == b'o':
+                # d -> ARCHIVE_ITEM_DEPENDENCY
+                # o -> ARCHIVE_ITEM_RUNTIME_OPTION
+                # These are runtime options, not files
+                continue
+
+            basePath = os.path.dirname(entry.name)
+            if basePath != '':
+                # Check if path exists, create if not
+                if not os.path.exists(basePath):
+                    os.makedirs(basePath)
 
             if entry.typeCmprsData == b's':
                 # s -> ARCHIVE_ITEM_PYSOURCE
@@ -301,12 +307,6 @@ class PyInstArchive:
                 # m -> ARCHIVE_ITEM_PYMODULE
                 # packages and modules are pyc files with their header's intact
                 self._writeRawData(entry.name + '.pyc', data)
-
-            elif entry.typeCmprsData == b'd' or entry.typeCmprsData == b'o':
-                # d -> ARCHIVE_ITEM_DEPENDENCY
-                # o -> ARCHIVE_ITEM_RUNTIME_OPTION
-                # These are runtime options, not files
-                pass
 
             else:
                 self._writeRawData(entry.name, data)
