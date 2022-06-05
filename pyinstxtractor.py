@@ -174,7 +174,7 @@ class PyInstArchive:
 
         self.fPtr.seek(self.cookiePos + self.PYINST20_COOKIE_SIZE, os.SEEK_SET)
 
-        if b'python' in self.fPtr.read(64):
+        if b'python' in self.fPtr.read(64).lower():
             print('[+] Pyinstaller version: 2.1+')
             self.pyinstVer = 21     # pyinstaller 2.1+
         else:
