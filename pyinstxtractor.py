@@ -190,21 +190,22 @@ class PyInstArchive:
                 self.fPtr.seek(self.cookiePos, os.SEEK_SET)
 
                 # Read CArchive cookie
-                (magic, lengthofPackage, toc, tocLen, self.pyver) = \
+                (magic, lengthofPackage, toc, tocLen, pyver) = \
                 struct.unpack('!8siiii', self.fPtr.read(self.PYINST20_COOKIE_SIZE))
 
             elif self.pyinstVer == 21:
                 self.fPtr.seek(self.cookiePos, os.SEEK_SET)
 
                 # Read CArchive cookie
-                (magic, lengthofPackage, toc, tocLen, self.pyver, pylibname) = \
+                (magic, lengthofPackage, toc, tocLen, pyver, pylibname) = \
                 struct.unpack('!8siiii64s', self.fPtr.read(self.PYINST21_COOKIE_SIZE))
 
         except:
             print('[!] Error : The file is not a pyinstaller archive')
             return False
 
-        print('[+] Python version: {0}'.format(self.pyver))
+        self.pymaj, self.pymin = (pyver//100, pyver%100) if pyver >= 100 else (pyver//10, pyver%10)
+        print('[+] Python version: {0}.{1}'.format(self.pymaj, self.pymin))
 
         # Additional data after the cookie
         tailBytes = self.fileSize - self.cookiePos - (self.PYINST20_COOKIE_SIZE if self.pyinstVer == 20 else self.PYINST21_COOKIE_SIZE)
@@ -319,13 +320,13 @@ class PyInstArchive:
         with open(filename, 'wb') as pycFile:
             pycFile.write(pyc_magic)            # pyc magic
 
-            if self.pyver >= 37:                # PEP 552 -- Deterministic pycs
+            if self.pymaj >= 3 and self.pymin >= 7:                # PEP 552 -- Deterministic pycs
                 pycFile.write(b'\0' * 4)        # Bitfield
                 pycFile.write(b'\0' * 8)        # (Timestamp + size) || hash 
 
             else:
                 pycFile.write(b'\0' * 4)      # Timestamp
-                if self.pyver >= 33:
+                if self.pymaj >= 3 and self.pymin >= 3:
                     pycFile.write(b'\0' * 4)  # Size parameter added in Python 3.3
 
             pycFile.write(data)
@@ -346,7 +347,7 @@ class PyInstArchive:
             # Skip PYZ extraction if not running under the same python version
             if pyc_magic != pycHeader:
                 print('[!] Warning: This script is running in a different Python version than the one used to build the executable.')
-                print('[!] Please run this script in Python{0} to prevent extraction errors during unmarshalling'.format(self.pyver))
+                print('[!] Please run this script in Python {0}.{1} to prevent extraction errors during unmarshalling'.format(self.pymaj, self.pymin))
                 print('[!] Skipping pyz extraction')
                 return
 
