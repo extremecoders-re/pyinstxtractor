@@ -257,6 +257,11 @@ class PyInstArchive:
 
 
     def _writeRawData(self, filepath, data):
+        # `struct.pyc` contains the value of `pyc_magic` in the packaging environment
+        # So we use it to replace the default value of `pyc_magic`
+        global pyc_magic
+        if filepath == "struct.pyc":
+            pyc_magic = data[:4]
         nm = filepath.replace('\\', os.path.sep).replace('/', os.path.sep).replace('..', '__')
         nmDir = os.path.dirname(nm)
         if nmDir != '' and not os.path.exists(nmDir): # Check if path exists, create if not
