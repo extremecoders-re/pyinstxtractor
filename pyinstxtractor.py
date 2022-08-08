@@ -279,6 +279,7 @@ class PyInstArchive:
             os.mkdir(extractionDir)
 
         os.chdir(extractionDir)
+        pyc_list = []
 
         for entry in self.tocList:
             self.fPtr.seek(entry.position, os.SEEK_SET)
@@ -305,8 +306,7 @@ class PyInstArchive:
             if entry.typeCmprsData == b's':
                 # s -> ARCHIVE_ITEM_PYSOURCE
                 # Entry point are expected to be python scripts
-                print('[+] Possible entry point: {0}.pyc'.format(entry.name))
-                self._writePyc(entry.name + '.pyc', data)
+                pyc_list.append(( entry.name+".pyc", data ))
 
             elif entry.typeCmprsData == b'M' or entry.typeCmprsData == b'm':
                 # M -> ARCHIVE_ITEM_PYPACKAGE
@@ -320,6 +320,9 @@ class PyInstArchive:
                 if entry.typeCmprsData == b'z' or entry.typeCmprsData == b'Z':
                     self._extractPyz(entry.name)
 
+        for pyc_filename, data in pyc_list:
+            print('[+] Possible entry point: {0}'.format(pyc_filename))
+            self._writePyc(pyc_filename, data)
 
     def _writePyc(self, filename, data):
         with open(filename, 'wb') as pycFile:
