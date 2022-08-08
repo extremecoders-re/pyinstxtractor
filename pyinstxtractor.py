@@ -271,9 +271,12 @@ class PyInstArchive:
             f.write(data)
 
 
-    def extractFiles(self):
+    def extractFiles(self, tmpdir=None):
         print('[+] Beginning extraction...please standby')
-        extractionDir = os.path.join(os.getcwd(), os.path.basename(self.filePath) + '_extracted')
+        if tmpdir == None:
+            tmpdir = os.getcwd()
+        extractionDir = os.path.join(tmpdir, os.path.basename(self.filePath) + '_extracted')
+        print(extractionDir)
 
         if not os.path.exists(extractionDir):
             os.mkdir(extractionDir)
@@ -323,6 +326,15 @@ class PyInstArchive:
         for pyc_filename, data in pyc_list:
             print('[+] Possible entry point: {0}'.format(pyc_filename))
             self._writePyc(pyc_filename, data)
+        return [
+                os.path.join(extractionDir, x[0])
+                    for x in pyc_list if x[0] not in (
+                        'pyiboot01_bootstrap.pyc',
+                        'pyi_rth_subprocess.pyc',
+                        'pyi_rth_pkgutil.pyc',
+                        'pyi_rth_inspect.pyc'
+                    )
+        ]
 
     def _writePyc(self, filename, data):
         with open(filename, 'wb') as pycFile:
@@ -408,25 +420,24 @@ class PyInstArchive:
                     self._writePyc(filePath, data)
 
 
-def main():
-    if len(sys.argv) < 2:
-        print('[+] Usage: pyinstxtractor.py <filename>')
-
-    else:
-        arch = PyInstArchive(sys.argv[1])
-        if arch.open():
-            if arch.checkFile():
-                if arch.getCArchiveInfo():
-                    arch.parseTOC()
-                    arch.extractFiles()
-                    arch.close()
-                    print('[+] Successfully extracted pyinstaller archive: {0}'.format(sys.argv[1]))
-                    print('')
-                    print('You can now use a python decompiler on the pyc files within the extracted directory')
-                    return
-
-            arch.close()
+def main(filepath, outdirectory=None):
+    pyc_list = []
+    arch = PyInstArchive(filepath)
+    if arch.open():
+        if arch.checkFile():
+            if arch.getCArchiveInfo():
+                arch.parseTOC()
+                pyc_list = arch.extractFiles(outdirectory)
+                arch.close()
+                print('[+] Successfully extracted pyinstaller archive: {0}'.format(filepath))
+                print('')
+                print('You can now use a python decompiler on the pyc files within the extracted directory')
+        arch.close()
+    return pyc_list
 
 
 if __name__ == '__main__':
-    main()
+    if len(sys.argv) < 2:
+        print('[+] Usage: pyinstxtractor.py <filename>')
+    else:
+        main(sys.argv[1])
