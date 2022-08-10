@@ -332,6 +332,7 @@ class PyInstArchive:
                         'pyiboot01_bootstrap.pyc',
                         'pyi_rth_subprocess.pyc',
                         'pyi_rth_pkgutil.pyc',
+                        'pyi_rth_multiprocessing.pyc',
                         'pyi_rth_inspect.pyc'
                     )
         ]
