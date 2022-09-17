@@ -91,14 +91,6 @@ import zlib
 import sys
 from uuid import uuid4 as uniquename
 
-# imp is deprecated in Python3 in favour of importlib
-if sys.version_info.major == 3:
-    from importlib.util import MAGIC_NUMBER
-    pyc_magic = MAGIC_NUMBER
-else:
-    import imp
-    pyc_magic = imp.get_magic()
-
 
 class CTOCEntry:
     def __init__(self, position, cmprsdDataSize, uncmprsdDataSize, cmprsFlag, typeCmprsData, name):
@@ -117,6 +109,8 @@ class PyInstArchive:
 
     def __init__(self, path):
         self.filePath = path
+        self.pycMagic = b'\0' * 4
+        self.barePycList = [] # List of pyc's whose headers have to be fixed
 
 
     def open(self):
@@ -209,7 +203,7 @@ class PyInstArchive:
 
         # Additional data after the cookie
         tailBytes = self.fileSize - self.cookiePos - (self.PYINST20_COOKIE_SIZE if self.pyinstVer == 20 else self.PYINST21_COOKIE_SIZE)
-        
+
         # Overlay is the data appended at the end of the PE
         self.overlaySize = lengthofPackage + tailBytes
         self.overlayPos = self.fileSize - self.overlaySize
@@ -301,13 +295,32 @@ class PyInstArchive:
                 # s -> ARCHIVE_ITEM_PYSOURCE
                 # Entry point are expected to be python scripts
                 print('[+] Possible entry point: {0}.pyc'.format(entry.name))
+
+                if self.pycMagic == b'\0' * 4:
+                    # if we don't have the pyc header yet, fix them in a later pass
+                    self.barePycList.append(entry.name + '.pyc')
                 self._writePyc(entry.name + '.pyc', data)
 
             elif entry.typeCmprsData == b'M' or entry.typeCmprsData == b'm':
                 # M -> ARCHIVE_ITEM_PYPACKAGE
                 # m -> ARCHIVE_ITEM_PYMODULE
-                # packages and modules are pyc files with their header's intact
-                self._writeRawData(entry.name + '.pyc', data)
+                # packages and modules are pyc files with their header intact
+
+                # From PyInstaller 5.3 and above pyc headers are no longer stored
+                # https://github.com/pyinstaller/pyinstaller/commit/a97fdf
+                if data[2:4] == b'\r\n':
+                    # < pyinstaller 5.3
+                    if self.pycMagic == b'\0' * 4: 
+                        self.pycMagic = data[0:4]
+                    self._writeRawData(entry.name + '.pyc', data)
+
+                else:
+                    # >= pyinstaller 5.3
+                    if self.pycMagic == b'\0' * 4:
+                        # if we don't have the pyc header yet, fix them in a later pass
+                        self.barePycList.append(entry.name + '.pyc')
+
+                    self._writePyc(entry.name + '.pyc', data)
 
             else:
                 self._writeRawData(entry.name, data)
@@ -315,10 +328,20 @@ class PyInstArchive:
                 if entry.typeCmprsData == b'z' or entry.typeCmprsData == b'Z':
                     self._extractPyz(entry.name)
 
+        # Fix bare pyc's if any
+        self._fixBarePycs()
+
+
+    def _fixBarePycs(self):
+        for pycFile in self.barePycList:
+            with open(pycFile, 'r+b') as pycFile:
+                # Overwrite the first four bytes
+                pycFile.write(self.pycMagic)
+
 
     def _writePyc(self, filename, data):
         with open(filename, 'wb') as pycFile:
-            pycFile.write(pyc_magic)            # pyc magic
+            pycFile.write(self.pycMagic)            # pyc magic
 
             if self.pymaj >= 3 and self.pymin >= 7:                # PEP 552 -- Deterministic pycs
                 pycFile.write(b'\0' * 4)        # Bitfield
@@ -342,10 +365,17 @@ class PyInstArchive:
             pyzMagic = f.read(4)
             assert pyzMagic == b'PYZ\0' # Sanity Check
 
-            pycHeader = f.read(4) # Python magic value
+            pyzPycMagic = f.read(4) # Python magic value
+
+            if self.pycMagic == b'\0' * 4:
+                self.pycMagic = pyzPycMagic
+
+            elif self.pycMagic != pyzPycMagic:
+                self.pycMagic = pyzPycMagic
+                print('[!] Warning: pyc magic of files inside PYZ archive are different from those in CArchive')
 
             # Skip PYZ extraction if not running under the same python version
-            if pyc_magic != pycHeader:
+            if self.pymaj != sys.version_info.major or self.pymaj != self.pymaj != sys.version_info.minor:
                 print('[!] Warning: This script is running in a different Python version than the one used to build the executable.')
                 print('[!] Please run this script in Python {0}.{1} to prevent extraction errors during unmarshalling'.format(self.pymaj, self.pymin))
                 print('[!] Skipping pyz extraction')
