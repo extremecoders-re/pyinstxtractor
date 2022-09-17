@@ -375,7 +375,7 @@ class PyInstArchive:
                 print('[!] Warning: pyc magic of files inside PYZ archive are different from those in CArchive')
 
             # Skip PYZ extraction if not running under the same python version
-            if self.pymaj != sys.version_info.major or self.pymaj != self.pymaj != sys.version_info.minor:
+            if self.pymaj != sys.version_info.major or self.pymin != sys.version_info.minor:
                 print('[!] Warning: This script is running in a different Python version than the one used to build the executable.')
                 print('[!] Please run this script in Python {0}.{1} to prevent extraction errors during unmarshalling'.format(self.pymaj, self.pymin))
                 print('[!] Skipping pyz extraction')
