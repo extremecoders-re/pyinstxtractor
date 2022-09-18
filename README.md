@@ -47,6 +47,11 @@ Pyinstxtractor can natively extract Linux ELF binaries without other requiring a
 
 For other questions and information, please see the [Wiki](https://github.com/extremecoders-re/pyinstxtractor/wiki/Extracting-Linux-ELF-binaries) and the [FAQ](https://github.com/extremecoders-re/pyinstxtractor/wiki/Frequently-Asked-Questions)
 
+## See also
+
+- [pyinstxtractor-ng](https://github.com/pyinstxtractor/pyinstxtractor-ng): 
+A standalone binary version of pyinstxtractor. This tool doesn't require Python to run and can extract all supported versions of PyInstaller.
+
 ## License
 
 GNU General Public License v3.0
