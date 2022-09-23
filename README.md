@@ -50,7 +50,7 @@ For other questions and information, please see the [Wiki](https://github.com/ex
 ## See also
 
 - [pyinstxtractor-ng](https://github.com/pyinstxtractor/pyinstxtractor-ng): 
-A standalone binary version of pyinstxtractor. This tool doesn't require Python to run and can extract all supported versions of PyInstaller.
+A standalone binary version of pyinstxtractor. This tool doesn't require Python to run and can extract all supported versions of PyInstaller. It also supports encrypted pyinstaller executables.
 - [pyinstxtractor-web](https://pyinstxtractor-web.netlify.app): pyinstxtractor running in the web browser, powered by Go & GopherJS.
 
 ## License
