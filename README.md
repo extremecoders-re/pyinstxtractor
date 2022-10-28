@@ -2,7 +2,7 @@
 
 PyInstaller Extractor is a Python script to extract the contents of a PyInstaller generated executable file.
 
-The header of the pyc files are automatically fixed so that a Python bytecode decompiler will recognize it. The script can run on both Python 2.x and 3.x. PyInstaller versions 2.0, 2.1, 3.0, 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 4.0, 4.1, 4.2, 4.3, 4.4, 4.5, 4.5.1, 4.6, 4.7, 4.8, 4.9, 4.10, 5.0, 5.0.1, 5.1, 5.2, 5.3, 5.4, 5.4.1 are [tested](https://github.com/extremecoders-re/pyinstxtractor-test-binaries) & supported. Probably will work with other versions too.
+The header of the pyc files are automatically fixed so that a Python bytecode decompiler will recognize it. The script can run on both Python 2.x and 3.x. PyInstaller versions 2.0, 2.1, 3.0, 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 4.0, 4.1, 4.2, 4.3, 4.4, 4.5, 4.5.1, 4.6, 4.7, 4.8, 4.9, 4.10, 5.0, 5.0.1, 5.1, 5.2, 5.3, 5.4, 5.4.1, 5.5, 5.6, 5.6.1 are [tested](https://github.com/extremecoders-re/pyinstxtractor-test-binaries) & supported. Probably will work with other versions too.
 
 This project was originally hosted on [SourceForge](https://sourceforge.net/projects/pyinstallerextractor/).
 
@@ -43,7 +43,7 @@ X:\> uncompyle6.exe test.exe_extracted\PYZ-00.pyz_extracted\__future__.pyc
 ```
 ## Extracting Linux ELF binaries
 
-Pyinstxtractor can natively extract Linux ELF binaries without other requiring additional tools.
+Pyinstxtractor can natively extract Linux ELF binaries without requiring other tools.
 
 For other questions and information, please see the [Wiki](https://github.com/extremecoders-re/pyinstxtractor/wiki/Extracting-Linux-ELF-binaries) and the [FAQ](https://github.com/extremecoders-re/pyinstxtractor/wiki/Frequently-Asked-Questions)
 
