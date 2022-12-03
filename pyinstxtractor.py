@@ -192,7 +192,7 @@ class PyInstArchive:
 
                 # Read CArchive cookie
                 (magic, lengthofPackage, toc, tocLen, pyver, pylibname) = \
-                struct.unpack('!8siiii64s', self.fPtr.read(self.PYINST21_COOKIE_SIZE))
+                struct.unpack('!8sIIii64s', self.fPtr.read(self.PYINST21_COOKIE_SIZE))
 
         except:
             print('[!] Error : The file is not a pyinstaller archive')
@@ -224,11 +224,11 @@ class PyInstArchive:
         # Parse table of contents
         while parsedLen < self.tableOfContentsSize:
             (entrySize, ) = struct.unpack('!i', self.fPtr.read(4))
-            nameLen = struct.calcsize('!iiiiBc')
+            nameLen = struct.calcsize('!iIIIBc')
 
             (entryPos, cmprsdDataSize, uncmprsdDataSize, cmprsFlag, typeCmprsData, name) = \
             struct.unpack( \
-                '!iiiBc{0}s'.format(entrySize - nameLen), \
+                '!IIIBc{0}s'.format(entrySize - nameLen), \
                 self.fPtr.read(entrySize - 4))
 
             name = name.decode('utf-8').rstrip('\0')
