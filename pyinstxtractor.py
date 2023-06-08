@@ -232,6 +232,11 @@ class PyInstArchive:
                 self.fPtr.read(entrySize - 4))
 
             name = name.decode('utf-8').rstrip('\0')
+            
+            # Prevent writing outside the extraction directory
+            if name.startswith("/"):
+                name = name.lstrip("/")
+
             if len(name) == 0:
                 name = str(uniquename())
                 print('[!] Warning: Found an unamed file in CArchive. Using random name {0}'.format(name))
