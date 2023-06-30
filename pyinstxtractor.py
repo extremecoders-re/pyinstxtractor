@@ -279,7 +279,11 @@ class PyInstArchive:
             data = self.fPtr.read(entry.cmprsdDataSize)
 
             if entry.cmprsFlag == 1:
-                data = zlib.decompress(data)
+                try:
+                    data = zlib.decompress(data)
+                except zlib.error:
+                    print('[!] Error : Failed to decompress {0}'.format(entry.name))
+                    continue
                 # Malware may tamper with the uncompressed size
                 # Comment out the assertion in such a case
                 assert len(data) == entry.uncmprsdDataSize # Sanity Check
