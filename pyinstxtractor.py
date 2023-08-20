@@ -231,7 +231,12 @@ class PyInstArchive:
                 '!IIIBc{0}s'.format(entrySize - nameLen), \
                 self.fPtr.read(entrySize - 4))
 
-            name = name.decode('utf-8').rstrip('\0')
+            try:
+                name = name.decode("utf-8").rstrip("\0")
+            except UnicodeDecodeError:
+                newName = str(uniquename())
+                print('[!] Warning: File name {0} contains invalid bytes. Using random name {1}'.format(name, newName))
+                name = newName
             
             # Prevent writing outside the extraction directory
             if name.startswith("/"):
