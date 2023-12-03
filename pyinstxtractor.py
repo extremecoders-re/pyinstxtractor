@@ -20,7 +20,7 @@ extracting the PYZ archive.
 Usage : Just copy this script to the directory where your exe resides
         and run the script with the exe file name as a parameter
 
-C:\path\to\exe\>python pyinstxtractor.py <filename>
+C:\\path\\to\\exe\\>python pyinstxtractor.py <filename>
 $ /path/to/exe/python pyinstxtractor.py <filename>
 
 Licensed under GNU General Public License (GPL) v3.
