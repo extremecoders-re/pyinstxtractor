@@ -83,15 +83,14 @@ Version 2.0 (March 26, 2020)
 - The header of all extracted pyc's are now automatically fixed
 """
 
-from __future__ import print_function
+import logging
+import marshal
 import os
 import struct
-import marshal
-import zlib
 import sys
-from uuid import uuid4 as uniquename
+import zlib
 from contextlib import suppress
-import logging
+from uuid import uuid4 as uniquename
 
 log = logging.getLogger()
 
@@ -188,7 +187,7 @@ class PyInstArchive:
             return False
 
         self.pymaj, self.pymin = (pyver // 100, pyver % 100) if pyver >= 100 else (pyver // 10, pyver % 10)
-        log.debug("[+] Python version: {0}.{1}".format(self.pymaj, self.pymin))
+        log.debug("[+] Python version: %d.%d", self.pymaj, self.pymin)
 
         # Additional data after the cookie
         tailBytes = (
