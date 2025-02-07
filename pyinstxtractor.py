@@ -444,7 +444,7 @@ if __name__ == "__main__":
     )
     parser.add_argument("-f", "--file", action="store")
     parser.add_argument("-d", "--destination-folder", action="store", help="Folder to store extracted files")
-    parser.add_argument("-e", "--entry-points", action="store_true", help="Extract only possibble entry points")
+    parser.add_argument("-e", "--entry-points", action="store_true", help="Extract only possible entry points")
 
     options = parser.parse_args()
     if not options.file or not os.path.exists(options.file):
