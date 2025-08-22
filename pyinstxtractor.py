@@ -89,6 +89,7 @@ import struct
 import marshal
 import zlib
 import sys
+import argparse
 from uuid import uuid4 as uniquename
 
 
@@ -107,8 +108,9 @@ class PyInstArchive:
     PYINST21_COOKIE_SIZE = 24 + 64      # For pyinstaller 2.1+
     MAGIC = b'MEI\014\013\012\013\016'  # Magic number which identifies pyinstaller
 
-    def __init__(self, path):
+    def __init__(self, path, outputDir=None):
         self.filePath = path
+        self.outputDir = outputDir
         self.pycMagic = b'\0' * 4
         self.barePycList = [] # List of pyc's whose headers have to be fixed
 
@@ -272,12 +274,33 @@ class PyInstArchive:
 
     def extractFiles(self):
         print('[+] Beginning extraction...please standby')
-        extractionDir = os.path.join(os.getcwd(), os.path.basename(self.filePath) + '_extracted')
 
-        if not os.path.exists(extractionDir):
-            os.mkdir(extractionDir)
+        if self.outputDir:
+            # Use custom output directory
+            extractionDir = os.path.abspath(self.outputDir)
+            try:
+                if not os.path.exists(extractionDir):
+                    os.makedirs(extractionDir)
+                elif not os.path.isdir(extractionDir):
+                    print('[!] Error: Output path exists but is not a directory: {0}'.format(extractionDir))
+                    return False
+            except OSError as e:
+                print('[!] Error: Could not create output directory {0}: {1}'.format(extractionDir, str(e)))
+                return False
+        else:
+            # Use default extraction directory
+            extractionDir = os.path.join(os.getcwd(), os.path.basename(self.filePath) + '_extracted')
+            if not os.path.exists(extractionDir):
+                os.mkdir(extractionDir)
 
-        os.chdir(extractionDir)
+        # Store original directory to restore later
+        originalDir = os.getcwd()
+
+        try:
+            os.chdir(extractionDir)
+        except OSError as e:
+            print('[!] Error: Could not change to extraction directory {0}: {1}'.format(extractionDir, str(e)))
+            return False
 
         for entry in self.tocList:
             self.fPtr.seek(entry.position, os.SEEK_SET)
@@ -344,6 +367,15 @@ class PyInstArchive:
 
         # Fix bare pyc's if any
         self._fixBarePycs()
+
+        # Restore original directory
+        try:
+            os.chdir(originalDir)
+        except OSError:
+            pass  # Ignore errors when restoring directory
+
+        print('[+] Extraction completed to: {0}'.format(extractionDir))
+        return True
 
 
     def _fixBarePycs(self):
@@ -444,25 +476,74 @@ class PyInstArchive:
                     self._writePyc(filePath, data)
 
 
-def main():
-    if len(sys.argv) < 2:
-        print('[+] Usage: pyinstxtractor.py <filename>')
+def parse_arguments():
+    """Parse command line arguments."""
+    parser = argparse.ArgumentParser(
+        description='PyInstaller Extractor - Extract files from PyInstaller generated executables',
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog='''
+Examples:
+  python pyinstxtractor.py myapp.exe
+  python pyinstxtractor.py myapp.exe --output-dir /path/to/extract
+  python pyinstxtractor.py myapp.exe -o extracted_files
+        '''
+    )
 
-    else:
-        arch = PyInstArchive(sys.argv[1])
-        if arch.open():
-            if arch.checkFile():
-                if arch.getCArchiveInfo():
-                    arch.parseTOC()
-                    arch.extractFiles()
+    parser.add_argument(
+        'filename',
+        help='Path to the PyInstaller executable to extract'
+    )
+
+    parser.add_argument(
+        '--output-dir', '-o',
+        dest='output_dir',
+        metavar='DIR',
+        help='Directory to extract files to (default: <filename>_extracted in current directory)'
+    )
+
+    return parser.parse_args()
+
+
+def main():
+    args = parse_arguments()
+
+    # Validate input file
+    if not os.path.isfile(args.filename):
+        print('[!] Error: File not found: {0}'.format(args.filename))
+        return 1
+
+    # Validate output directory if specified
+    if args.output_dir:
+        output_dir = os.path.abspath(args.output_dir)
+
+        # Check if parent directory exists and is writable
+        parent_dir = os.path.dirname(output_dir)
+        if not os.path.exists(parent_dir):
+            print('[!] Error: Parent directory does not exist: {0}'.format(parent_dir))
+            return 1
+
+        if not os.access(parent_dir, os.W_OK):
+            print('[!] Error: No write permission for parent directory: {0}'.format(parent_dir))
+            return 1
+
+    arch = PyInstArchive(args.filename, args.output_dir)
+    if arch.open():
+        if arch.checkFile():
+            if arch.getCArchiveInfo():
+                arch.parseTOC()
+                if arch.extractFiles():
                     arch.close()
-                    print('[+] Successfully extracted pyinstaller archive: {0}'.format(sys.argv[1]))
+                    print('[+] Successfully extracted pyinstaller archive: {0}'.format(args.filename))
                     print('')
                     print('You can now use a python decompiler on the pyc files within the extracted directory')
-                    return
+                    return 0
+                else:
+                    arch.close()
+                    return 1
+        arch.close()
 
-            arch.close()
+    return 1
 
 
 if __name__ == '__main__':
-    main()
+    sys.exit(main())
