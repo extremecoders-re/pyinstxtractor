@@ -309,7 +309,7 @@ class PyInstArchive:
             if entry.typeCmprsData == b's':
                 # s -> ARCHIVE_ITEM_PYSOURCE
                 # Entry point are expected to be python scripts
-                print_good('Possible entry point: {0}.pyc'.format(entry.name))
+                print_status('Possible entry point: {0}.pyc'.format(entry.name))
 
                 if self.pycMagic == b'\0' * 4:
                     # if we don't have the pyc header yet, fix them in a later pass
