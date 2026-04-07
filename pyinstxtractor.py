@@ -434,6 +434,11 @@ class PyInstArchive:
                 if not os.path.exists(fileDir):
                     os.makedirs(fileDir)
 
+                if length == 0:
+                    print('[!] Warning: Empty file {0}'.format(filePath))
+                    self._writePyc(filePath, b"")
+                    continue
+
                 try:
                     data = f.read(length)
                     data = zlib.decompress(data)
