@@ -273,6 +273,12 @@ class PyInstArchive:
         with open(nm, 'wb') as f:
             f.write(data)
 
+    def _ensureUnique(self, fileName, ext=""):
+        if os.path.exists(fileName + ext):
+            newName = fileName + "_" + str(uniquename())
+            print('[!] Warning: {0} already exists, saving as {1}'.format(fileName + ext, newName + ext))
+            return newName
+        return fileName
 
     def extractFiles(self):
         print('[+] Beginning extraction...please standby')
@@ -314,6 +320,7 @@ class PyInstArchive:
                 # Entry point are expected to be python scripts
                 print('[+] Possible entry point: {0}.pyc'.format(entry.name))
 
+                entry.name = self._ensureUnique(entry.name, '.pyc')
                 if self.pycMagic == b'\0' * 4:
                     # if we don't have the pyc header yet, fix them in a later pass
                     self.barePycList.append(entry.name + '.pyc')
@@ -323,6 +330,8 @@ class PyInstArchive:
                 # M -> ARCHIVE_ITEM_PYPACKAGE
                 # m -> ARCHIVE_ITEM_PYMODULE
                 # packages and modules are pyc files with their header intact
+
+                entry.name = self._ensureUnique(entry.name, '.pyc')
 
                 # From PyInstaller 5.3 and above pyc headers are no longer stored
                 # https://github.com/pyinstaller/pyinstaller/commit/a97fdf
@@ -341,6 +350,7 @@ class PyInstArchive:
                     self._writePyc(entry.name + '.pyc', data)
 
             else:
+                entry.name = self._ensureUnique(entry.name)
                 self._writeRawData(entry.name, data)
 
                 if entry.typeCmprsData == b'z' or entry.typeCmprsData == b'Z':
